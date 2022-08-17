@@ -1,8 +1,8 @@
 """CS 61A Presents The Game of Hog."""
-
 from dice import six_sided, four_sided, make_test_dice
 from ucb import main, trace, interact
 from math import sqrt
+
 
 GOAL_SCORE = 100  # The goal of Hog is to score 100 points.
 
@@ -128,7 +128,7 @@ def silence(score0, score1, leader=None):
 
 
 def play(strategy0, strategy1, score0=0, score1=0, dice=six_sided,
-         goal=GOAL_SCORE, say=silence):
+        goal=GOAL_SCORE, say=silence):
     """Simulate a game and return the final scores of both players, with Player
     0's score first, and Player 1's score second.
 
@@ -147,11 +147,22 @@ def play(strategy0, strategy1, score0=0, score1=0, dice=six_sided,
     who = 0  # Who is about to take a turn, 0 (first) or 1 (second)
     leader = None  # To be used in problem 7
     # BEGIN PROBLEM 5
-    "*** YOUR CODE HERE ***"
+    while score0 < goal and score1 < goal:
+        if who == 0:
+            num_rolls0 = strategy0(score0, score1)
+            score0 = score0 + take_turn(num_rolls0, score0, score1, dice, goal)
+            score0 = score0 + pigs_on_prime(score0, score1)
+        elif who == 1:
+            num_rolls1 = strategy1(score1, score0)
+            score1 = score1 + take_turn(num_rolls1, score1, score0, dice, goal)
+            score1 = score1 + pigs_on_prime(score1, score0)
+        who = next_player(who)    
     # END PROBLEM 5
     # (note that the indentation for the problem 7 prompt (***YOUR CODE HERE***) might be misleading)
     # BEGIN PROBLEM 7
-    "*** YOUR CODE HERE ***"
+        leader, message = say(score0, score1, leader)
+        if not (message == None or message == ""):
+            print(message)
     # END PROBLEM 7
     return score0, score1
 
@@ -185,7 +196,19 @@ def announce_lead_changes(score0, score1, last_leader=None):
     Player 0 takes the lead by 2
     """
     # BEGIN PROBLEM 6
-    "*** YOUR CODE HERE ***"
+    if score0 == score1:
+        return None, None
+
+    elif score0 > score1 and (last_leader == 1 or last_leader == None):
+        return 0, ("Player 0 takes the lead by " + str(score0 - score1)) 
+    elif score0 > score1 and last_leader == 0:
+        return 0, None
+
+
+    elif score0 < score1 and (last_leader == 0 or last_leader == None):
+        return 1, ("Player 1 takes the lead by " + str(score1 - score0))
+    elif score0 < score1 and last_leader == 1:
+        return 1, None
     # END PROBLEM 6
 
 
@@ -251,7 +274,15 @@ def make_averaged(original_function, total_samples=1000):
     3.0
     """
     # BEGIN PROBLEM 8
-    "*** YOUR CODE HERE ***"
+    def average(*args):
+        i, total = 0, 0
+        while i < total_samples:
+            total = total + original_function(*args)
+            i = i + 1
+        return total / total_samples
+    return average 
+
+
     # END PROBLEM 8
 
 
@@ -265,7 +296,17 @@ def max_scoring_num_rolls(dice=six_sided, total_samples=1000):
     1
     """
     # BEGIN PROBLEM 9
-    "*** YOUR CODE HERE ***"
+    i, maximum =1,  1
+    averaged = make_averaged(roll_dice, total_samples)
+    max_val = 0
+    while i <= 10:
+        curr_average_val = averaged(i,dice)
+        if max_val < curr_average_val:
+            max_val = curr_average_val
+            maximum = i
+        i += 1
+    return maximum
+        
     # END PROBLEM 9
 
 
@@ -305,8 +346,12 @@ def oink_points_strategy(score, opponent_score, threshold=8, num_rolls=6):
     """This strategy returns 0 dice if that gives at least THRESHOLD points, and
     returns NUM_ROLLS otherwise.
     """
-    # BEGIN PROBLEM 10
-    return 6  # Remove this line once implemented.
+    # BEGIN PROBLEM 10  
+    if oink_points(score, opponent_score) >= threshold:
+        return 0
+    else:
+        return num_rolls
+
     # END PROBLEM 10
 
 
@@ -316,7 +361,13 @@ def pigs_on_prime_strategy(score, opponent_score, threshold=8, num_rolls=6):
     Otherwise, it returns NUM_ROLLS.
     """
     # BEGIN PROBLEM 11
-    return 6  # Remove this line once implemented.
+    diff = oink_points(score, opponent_score)
+    if pigs_on_prime(score + diff, opponent_score) != 0:
+        return 0
+    elif diff >= threshold:
+        return 0
+    else:
+        return num_rolls
     # END PROBLEM 11
 
 
